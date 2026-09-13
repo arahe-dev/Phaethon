@@ -4,6 +4,10 @@
 </p>
 
 <p align="center">
+  <img src="assets/hero-phaethon.webp" alt="Phaethon: a patched-together parcel that gets delivered anyway" width="340" />
+</p>
+
+<p align="center">
   <strong>Keep healthy traffic direct. Relay only what actually needs help.</strong>
 </p>
 

@@ -3,12 +3,18 @@
 ## The mark
 
 Two routes leave the same point. One continues straight; the other diverts and
-is drawn in the accent colour.
+is drawn in the accent colour. Both **arrive** — each ends in an arrowhead.
 
 That is the product in one glyph. Phaethon keeps healthy traffic on the direct
 path and intervenes only where the direct path is broken — so the mark shows a
 split, not a tunnel. A tunnel would say "everything goes through me", which is
 the design Phaethon exists to avoid.
+
+The arrowheads are what make it about routing rather than about branching. A
+bare split reads as a fork, a decision tree, or a diverge icon. Two arrows read
+as traffic leaving by one of two routes and arriving either way, which is the
+actual behaviour: a relayed request is not a degraded request, it is the same
+request that took the long way round.
 
 The kraft dot at the origin is the nod to the mascot: the parcel that gets
 patched up and sent anyway.
