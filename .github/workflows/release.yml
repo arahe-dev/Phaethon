@@ -54,17 +54,19 @@ jobs:
         run: |
           ./installer/build-installer.ps1 -Version "${{ github.ref_name }}" -Binary dist/phaethon.exe -Out dist
 
-      # Hashes let a tester confirm the download, and let a future auto-updater
-      # verify it without trusting the transport.
-      - name: checksums
+      # Packaging and hashing both belong to build-all.ps1, which is the single
+      # place that knows the asset naming contract the installer depends on.
+      # Duplicating the hash step here is how the published checksums and the
+      # built archives drift apart.
+      - name: verify the release contains what the installer fetches
         shell: pwsh
         run: |
-          $lines = Get-ChildItem dist -File |
-            Where-Object { $_.Name -ne 'SHA256SUMS.txt' } |
-            ForEach-Object {
-              "{0}  {1}" -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name
+          $required = @('phaethon-linux-amd64.tar.gz','phaethon-linux-arm64.tar.gz','SHA256SUMS.txt')
+          foreach ($name in $required) {
+            if (-not (Test-Path (Join-Path dist $name))) {
+              throw "release is missing $name, which install.sh downloads"
             }
-          $lines | Set-Content dist/SHA256SUMS.txt -Encoding ascii
+          }
           Get-Content dist/SHA256SUMS.txt
 
       - name: publish
