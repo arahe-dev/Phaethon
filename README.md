@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="assets/hero-phaethon.webp" alt="Phaethon: a patched-together parcel that gets delivered anyway" width="85" />
+  <img src="assets/hero-phaethon.webp" alt="Phaethon: a patched-together parcel that gets delivered anyway" width="170" />
 </p>
 
 <p align="center">
-  <img src="assets/logo/phaethon-lockup-dark.svg#gh-dark-mode-only" alt="Phaethon" width="300" />
-  <img src="assets/logo/phaethon-lockup-light.svg#gh-light-mode-only" alt="Phaethon" width="300" />
+  <img src="assets/logo/phaethon-wordmark-dark.svg#gh-dark-mode-only" alt="Phaethon" width="300" />
+  <img src="assets/logo/phaethon-wordmark-light.svg#gh-light-mode-only" alt="Phaethon" width="300" />
 </p>
 
 <p align="center">
