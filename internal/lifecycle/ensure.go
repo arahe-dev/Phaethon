@@ -91,6 +91,19 @@ func Ensure(opts EnsureOptions) (Result, error) {
 			opts.Listen, pid, name)
 	}
 
+	// 3b. PortOwner parses netstat, which is not present or not formatted the
+	// same way on every platform, so a conflict is also detected by asking the
+	// address directly. Without this, a foreign listener on a platform where
+	// netstat is unavailable surfaces as a health timeout, which sends the
+	// reader looking for a broken daemon instead of an occupied port.
+	if dials(opts.Listen) {
+		if _, err := Probe(opts.Listen, time.Second); err != nil {
+			return Result{}, fmt.Errorf(
+				"lifecycle: %s is already in use and is not a healthy Phaethon daemon; "+
+					"refusing to start another (nothing was killed)", opts.Listen)
+		}
+	}
+
 	// 4. Nothing is serving: start one, detached, logging to the daemon log.
 	startedAt := time.Now()
 	if err := Spawn(exe, opts.Config); err != nil {
@@ -262,4 +275,18 @@ func StaleBinary(exePath string, started time.Time) (bool, time.Duration) {
 		return true, info.ModTime().Sub(started)
 	}
 	return false, 0
+}
+
+// dials reports whether anything is listening on the address.
+//
+// It distinguishes "nothing there" from "something there that is not answering
+// as a Phaethon daemon", which is the difference between a free port and a
+// conflict.
+func dials(addr string) bool {
+	c, err := net.DialTimeout("tcp", addr, 500*time.Millisecond)
+	if err != nil {
+		return false
+	}
+	_ = c.Close()
+	return true
 }

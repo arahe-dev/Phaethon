@@ -16,15 +16,39 @@ package release
 
 import (
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"testing"
 )
 
+// repoRoot locates the repository by walking up until it finds go.mod.
+//
+// Deriving it instead of assuming ../../ keeps the test working whichever
+// directory it is run from, including as a standalone test binary, where the
+// working directory is wherever that binary happens to be.
+func repoRoot(t *testing.T) string {
+	t.Helper()
+	dir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("cannot determine the working directory: %v", err)
+	}
+	for {
+		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
+			return dir
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			t.Fatal("no go.mod found above the working directory")
+		}
+		dir = parent
+	}
+}
+
 // repoFile reads a file from the repository root.
 func repoFile(t *testing.T, rel string) string {
 	t.Helper()
-	data, err := os.ReadFile("../../" + rel)
+	data, err := os.ReadFile(filepath.Join(repoRoot(t), filepath.FromSlash(rel)))
 	if err != nil {
 		t.Fatalf("cannot read %s: %v", rel, err)
 	}
@@ -122,7 +146,7 @@ func TestWorkflowReferencesExist(t *testing.T) {
 		if !strings.Contains(workflow, ref) {
 			continue // not referenced, nothing to check
 		}
-		if _, err := os.Stat("../../" + ref); err != nil {
+		if _, err := os.Stat(filepath.Join(repoRoot(t), filepath.FromSlash(ref))); err != nil {
 			t.Errorf("release.yml references %s, which does not exist: the publish step would fail", ref)
 		}
 	}

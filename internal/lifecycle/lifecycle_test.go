@@ -163,20 +163,24 @@ func TestStopWithNothingRunning(t *testing.T) {
 // "phaethon.exe~", which must still be recognised as ours. This is the exact
 // situation that arises when the daemon is rebuilt while running.
 func TestReplacedImageNameIsRecognised(t *testing.T) {
+	// Bare basenames, not full Windows paths. What is under test is the
+	// normalisation of a process image name, and filepath.Base does not split
+	// on backslashes off Windows, so a Windows path made this fail on Linux
+	// for a reason that has nothing to do with the behaviour.
 	for _, name := range []string{
-		`C:\phaethon\Phaethon\phaethon.exe`,
-		`C:\phaethon\Phaethon\phaethon.exe~`,
-		`C:\phaethon\Phaethon\phaethon-new.exe`,
-		`C:\phaethon\Phaethon\phaethon`,
+		"phaethon.exe",
+		"phaethon.exe~",
+		"phaethon-new.exe",
+		"phaethon",
 	} {
 		if !isDaemonBinary(name) {
 			t.Errorf("%s should be recognised as the daemon binary", name)
 		}
 	}
 	for _, name := range []string{
-		`C:\Windows\System32\svchost.exe`,
-		`C:\other\nginx.exe`,
-		`C:\phaethon\other-tool.exe`,
+		"svchost.exe",
+		"nginx.exe",
+		"other-tool.exe",
 	} {
 		if isDaemonBinary(name) {
 			t.Errorf("%s must NOT be recognised as the daemon binary", name)

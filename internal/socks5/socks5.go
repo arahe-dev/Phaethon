@@ -269,6 +269,16 @@ func readRequest(c net.Conn) (string, int, error) {
 		if name == "" {
 			name = "0x" + strconv.FormatUint(uint64(head[1]), 16)
 		}
+		// Read the request body before refusing it.
+		//
+		// RFC 1928 sends the address and port after the command byte, and a
+		// server that replies without reading them leaves those bytes in the
+		// receive buffer. Closing a socket that still has unread inbound data
+		// sends RST rather than FIN, and RST discards data the peer has not
+		// read yet — including the refusal just written. The client then
+		// reports "connection forcibly closed" instead of the protocol error,
+		// which makes an honest refusal look like a broken server.
+		_ = discardAddress(c, head[3])
 		return "", 0, &unsupportedCommand{command: name}
 	}
 
@@ -350,4 +360,27 @@ func (s *Server) logf(format string, args ...any) {
 	if s.Logf != nil {
 		s.Logf(format, args...)
 	}
+}
+
+// discardAddress consumes an address and port so a refusal can be sent without
+// leaving unread bytes behind.
+func discardAddress(c net.Conn, atyp byte) error {
+	var n int
+	switch atyp {
+	case atypIPv4:
+		n = 4
+	case atypIPv6:
+		n = 16
+	case atypDomain:
+		l := make([]byte, 1)
+		if _, err := io.ReadFull(c, l); err != nil {
+			return err
+		}
+		n = int(l[0])
+	default:
+		return fmt.Errorf("unsupported address type 0x%02x", atyp)
+	}
+	buf := make([]byte, n+2) // address plus the two port bytes
+	_, err := io.ReadFull(c, buf)
+	return err
 }
