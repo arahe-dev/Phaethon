@@ -52,7 +52,12 @@ jobs:
       - name: build installer
         shell: pwsh
         run: |
-          ./installer/build-installer.ps1 -Version "${{ github.ref_name }}" -Binary dist/phaethon.exe -Out dist
+          # The raw Windows binary lives inside the archive, not loose in dist:
+          # build-all.ps1 stages intermediates outside the output directory so
+          # they can be neither published nor hashed. Unpack it for the
+          # installer rather than expecting a bare dist/phaethon.exe.
+          Expand-Archive -LiteralPath dist/phaethon-windows-amd64.zip -DestinationPath dist/win -Force
+          ./installer/build-installer.ps1 -Version "${{ github.ref_name }}" -Binary dist/win/phaethon.exe -Out dist
 
       # Packaging and hashing both belong to build-all.ps1, which is the single
       # place that knows the asset naming contract the installer depends on.

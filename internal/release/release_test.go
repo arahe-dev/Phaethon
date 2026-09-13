@@ -188,3 +188,39 @@ func TestReleaseNotesListRealAssets(t *testing.T) {
 		}
 	}
 }
+
+// Every binary path the workflow hands to a script must exist after the build.
+//
+// This is the gap that let a real regression through: build-all.ps1 was changed
+// to package archives and stage raw binaries outside the output directory, and
+// the workflow still passed dist/phaethon.exe to the installer builder. The
+// release failed four minutes into a tagged run. Checking the Linux contract was
+// not enough, because the workflow has its own assumptions about where a build
+// leaves things.
+func TestWorkflowBinaryPathsAreProduced(t *testing.T) {
+	workflow := repoFile(t, ".github/workflows/release.yml")
+	build := repoFile(t, "scripts/build-all.ps1")
+
+	// A bare dist/phaethon.exe is no longer produced: the build stages
+	// intermediates outside the output directory on purpose.
+	if regexp.MustCompile(`-Binary\s+dist/phaethon\.exe\b`).MatchString(workflow) {
+		t.Error("release.yml passes dist/phaethon.exe to a script, but build-all.ps1 stages that " +
+			"binary inside an archive; unpack it first or the step fails after the build has succeeded")
+	}
+	// If the workflow wants a raw binary, it must extract it from something the
+	// build actually produces.
+	if strings.Contains(workflow, "installer/build-installer.ps1") {
+		if !strings.Contains(workflow, "phaethon-windows-amd64.zip") {
+			t.Error("the installer build must obtain its binary from the archive the build produces")
+		}
+		if !strings.Contains(workflow, "Expand-Archive") {
+			t.Error("the installer build must unpack the archive before using the binary inside it")
+		}
+	}
+	// Whatever the workflow names as a source must be a real build output.
+	for _, m := range regexp.MustCompile(`dist/(phaethon-[a-z0-9-]+\.(?:zip|tar\.gz))`).FindAllStringSubmatch(workflow, -1) {
+		if !strings.Contains(build, "phaethon-$(") && !strings.Contains(build, `"$base`) {
+			t.Errorf("workflow expects %s, but the build no longer derives names from a base", m[1])
+		}
+	}
+}
