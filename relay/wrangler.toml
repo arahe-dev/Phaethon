@@ -1,0 +1,9 @@
+name = "phaethon-relay"
+pages_build_output_dir = "public"
+compatibility_date = "2026-09-01"
+
+# The relay's host allowlist is enforced server-side. Override per
+# environment with the RELAY_ALLOWLIST variable (comma separated) if the
+# route table changes.
+[vars]
+RELAY_ALLOWLIST = "example.test,*.example.test,*.example.app,*.example-storage.test"

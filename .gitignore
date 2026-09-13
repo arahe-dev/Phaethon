@@ -1,0 +1,31 @@
+# Build artifacts (anchored to the repository root: an unanchored "phaethon"
+# would also ignore the cmd/phaethon/ source directory, which is how
+# FairySDK v0.1.0 shipped without its CLI)
+/phaethon
+/phaethon.exe
+/phaethon*.exe
+*.exe~
+*.test
+*.out
+
+# Local state: configurations and relay secrets are never committed
+*.local.json
+.relay-token
+flow-verification.txt
+relay/verify-relay-output.txt
+
+# Dependency directories and editor files
+vendor/
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Wrangler's local cache (account metadata, not project state)
+.wrangler/
+
+# Release build output
+/dist/

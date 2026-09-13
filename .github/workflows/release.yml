@@ -1,0 +1,82 @@
+name: release
+
+# Tag-driven: push a tag like v0.1.0-beta.1 and this produces the artifacts a
+# tester downloads. Nothing is published on an untagged commit, so `main` is
+# always releasable but never accidentally released.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      # The same gates as test.yml, repeated here on purpose: a release must
+      # never depend on a separate workflow having passed earlier.
+      - name: gofmt
+        run: |
+          $unformatted = gofmt -l .
+          if ($unformatted) { Write-Error "not gofmt-clean:`n$unformatted"; exit 1 }
+
+      - name: vet
+        run: go vet ./...
+
+      - name: test
+        run: go test ./... -count=1 -timeout 10m
+
+      - name: test (race)
+        run: go test -race ./... -count=1 -timeout 15m
+
+      - name: build
+        shell: pwsh
+        env:
+          # Phaethon's registered Cloudflare OAuth client. A PKCE public client
+          # has no secret, so this is not sensitive; it is a repository variable
+          # rather than a secret because a reader seeing it changes nothing.
+          PHAETHON_CLOUDFLARE_CLIENT_ID: ${{ vars.PHAETHON_CLOUDFLARE_CLIENT_ID }}
+        run: |
+          ./scripts/build-all.ps1 -Out dist -Checksums
+
+      - name: build installer
+        shell: pwsh
+        run: |
+          ./installer/build-installer.ps1 -Version "${{ github.ref_name }}" -Binary dist/phaethon.exe -Out dist
+
+      # Hashes let a tester confirm the download, and let a future auto-updater
+      # verify it without trusting the transport.
+      - name: checksums
+        shell: pwsh
+        run: |
+          $lines = Get-ChildItem dist -File |
+            Where-Object { $_.Name -ne 'SHA256SUMS.txt' } |
+            ForEach-Object {
+              "{0}  {1}" -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name
+            }
+          $lines | Set-Content dist/SHA256SUMS.txt -Encoding ascii
+          Get-Content dist/SHA256SUMS.txt
+
+      - name: publish
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # A private repository release: testers are collaborators, not the
+          # public, so the artifacts are attached to a draft-then-published
+          # release rather than announced.
+          gh release create "${{ github.ref_name }}" `
+            --title "Phaethon ${{ github.ref_name }}" `
+            --notes-file docs/RELEASE-NOTES.md `
+            --prerelease `
+            dist/*

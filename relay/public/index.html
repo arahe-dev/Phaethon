@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Phaethon relay</title>
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 3rem auto; max-width: 44rem; line-height: 1.5; }
+      code { background: #f1f5f9; padding: 0.15rem 0.35rem; border-radius: 4px; }
+      table { border-collapse: collapse; margin-top: 1rem; }
+      td, th { border-bottom: 1px solid #e2e8f0; padding: 0.4rem 0.8rem 0.4rem 0; text-align: left; }
+    </style>
+  </head>
+  <body>
+    <h1>Phaethon relay</h1>
+    <p>
+      This endpoint lets a Phaethon daemon on a filtered network reach origins that
+      the network breaks — currently <code>*.example.test</code>, whose TLS is
+      intercepted on the affected path. The Cloudflare edge performs the fetch and
+      returns the response.
+    </p>
+    <p>
+      It is <strong>not</strong> an open proxy and not a TCP tunnel. Every request
+      must carry a shared secret, and only hosts in this deployment's allowlist can
+      be fetched. The allowlist is enforced here, server-side.
+    </p>
+    <table>
+      <tr><th>Endpoint</th><th>Purpose</th></tr>
+      <tr><td><code>/health</code></td><td>liveness, colo, and this relay's allowlist</td></tr>
+      <tr><td><code>/relay/&lt;host&gt;/&lt;path&gt;</code></td><td>fetch an allowlisted origin (requires <code>X-Phaethon-Token</code>)</td></tr>
+    </table>
+  </body>
+</html>

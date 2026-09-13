@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Phaethon concept 2: mask and eyes">
+  <path d="M14 12 H50 V44 L56 52 H8 L14 44 Z" fill="#b5905f" stroke="#2b2f36" stroke-width="3" stroke-linejoin="round"/>
+  <ellipse cx="25" cy="28" rx="5" ry="7" fill="#d4e619" stroke="#2b2f36" stroke-width="2"/>
+  <ellipse cx="41" cy="28" rx="5" ry="7" fill="#d4e619" stroke="#2b2f36" stroke-width="2"/>
+</svg>

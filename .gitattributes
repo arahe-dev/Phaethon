@@ -1,0 +1,20 @@
+# Line endings are normalised to LF in the working tree on every platform.
+#
+# This is not cosmetic. `gofmt -l` reports a file as unformatted when its
+# contents differ from gofmt's output, and gofmt emits LF. With Git's default
+# Windows checkout behaviour a clone there has CRLF files, so a gofmt check
+# fails on every file even though the committed contents are correct. Pinning
+# the working tree to LF is what makes the same check pass on Windows, macOS
+# and Linux.
+* text=auto eol=lf
+
+# PowerShell reads either ending, but CRLF is native here and this keeps the
+# scripts readable in Windows editors without affecting execution.
+*.ps1 text eol=crlf
+
+# Anything binary must never be line-ending converted.
+*.exe binary
+*.png binary
+*.jpg binary
+*.ico binary
+*.wasm binary

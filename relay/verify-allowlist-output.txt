@@ -1,0 +1,17 @@
+allowlist: example.test, *.example.test, *.example.app
+
+== must be allowed (not 403) ==
+  example.test                         200 (expected 200) OK
+  api.example.test                     308 (expected 308) OK
+  swr.example.app                     307 (expected 302) MISMATCH  Redirecting...
+  www.example.test                     308 (expected 200) MISMATCH  Redirecting...
+
+== must be refused with 403 ==
+  example.com                        403 (expected 403) OK
+  github.com                         403 (expected 403) OK
+  notexample.test                      403 (expected 403) OK
+  example.test.evil.test               403 (expected 403) OK
+  xexample.app                        403 (expected 403) OK
+
+== the wildcard must not be defeated by a suffix trick ==
+  evilexample.app                     403 (expected 403) OK

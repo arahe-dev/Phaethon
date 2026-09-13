@@ -1,0 +1,70 @@
+name: cross-platform
+
+# The core is OS-agnostic and the host integrations are not, so the suite runs
+# on all three platforms rather than only where the product was developed.
+# Platform integration tests are written to use overridden state directories,
+# so they do not modify a runner's real proxy or trust store.
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: gofmt
+        shell: bash
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "these files are not gofmt-clean:"; echo "$unformatted"; exit 1
+          fi
+
+      - name: build
+        run: go build ./...
+
+      - name: vet
+        run: go vet ./...
+
+      - name: test
+        run: go test ./... -count=1 -timeout 10m
+
+      # Race detection is meaningful on all three; the concurrency lives in the
+      # daemon, the router and the interceptor, not in the host adapters.
+      - name: test (race)
+        run: go test -race ./... -count=1 -timeout 15m
+
+  cross-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: every supported target must build
+        run: |
+          set -e
+          for target in \
+            windows/amd64 windows/arm64 \
+            linux/amd64 linux/arm64 \
+            darwin/amd64 darwin/arm64 ; do
+            os=${target%/*}; arch=${target#*/}
+            echo "building $os/$arch"
+            GOOS=$os GOARCH=$arch CGO_ENABLED=0 go build -o /dev/null ./cmd/phaethon
+          done

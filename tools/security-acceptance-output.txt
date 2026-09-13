@@ -1,0 +1,42 @@
+=== E. security acceptance ===
+curl: (7) Failed to connect to 127.0.0.1 port 8377 after 0 ms: Could not connect to server
+  health (no token, must be 200):            000
+curl: (7) Failed to connect to 127.0.0.1 port 8377 after 0 ms: Could not connect to server
+  status without token (must be 401):        000
+curl: (7) Failed to connect to 127.0.0.1 port 8377 after 0 ms: Could not connect to server
+  status with token (must be 200):           000
+curl: (7) Failed to connect to 127.0.0.1 port 8377 after 0 ms: Could not connect to server
+  facade unlisted host (must be 403):        000
+curl: (7) Failed to connect to 127.0.0.1 port 8377 after 0 ms: Could not connect to server
+  facade lookalike notexample.test (must 403): 000
+curl: (7) Failed to connect to 127.0.0.1 port 8377 after 0 ms: Could not connect to server
+  facade example.test.evil.test (must be 403): 000
+curl: (7) Failed to connect to 127.0.0.1 port 8377 after 0 ms: Could not connect to server
+  facade 127.0.0.1 (loopback, must be 403):  000
+curl: (7) Failed to connect to 127.0.0.1 port 8377 after 0 ms: Could not connect to server
+  facade 169.254.169.254 (metadata, 403):    000
+curl: (7) Failed to connect to 127.0.0.1 port 8377 after 0 ms: Could not connect to server
+  facade 10.0.0.1 (private, must be 403):    000
+curl: (7) Failed to connect to 127.0.0.1 port 8377 after 0 ms: Could not connect to server
+  facade localhost (must be 403):            000
+curl: (7) Failed to connect to 127.0.0.1 port 8377 after 0 ms: Could not connect to server
+  daemon root path (must be 200 usage):      000
+
+=== browser surfaces for the routed hosts ===
+curl: (7) Failed to connect to 127.0.0.1 port 8377 after 0 ms: Could not connect to server
+  /r/example.test/                   000
+curl: (7) Failed to connect to 127.0.0.1 port 8377 after 0 ms: Could not connect to server
+  /r/api.example.test/               000
+curl: (7) Failed to connect to 127.0.0.1 port 8377 after 0 ms: Could not connect to server
+  /r/swr.example.app/               000
+curl: (7) Failed to connect to 127.0.0.1 port 8377 after 0 ms: Could not connect to server
+  /r/github.com/                   000
+curl: (7) Failed to connect to 127.0.0.1 port 8377 after 0 ms: Could not connect to server
+  /r/objects.githubusercontent.com/ 000
+curl: (7) Failed to connect to 127.0.0.1 port 8377 after 0 ms: Could not connect to server
+  /r/drive.google.com/             000
+
+=== current direct-path state for the same hosts ===
+  example.test               code=200 verify=0
+  api.example.test           code=308 verify=0
+  swr.example.app           code=307 verify=0

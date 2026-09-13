@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Phaethon concept 3: P with cut-through">
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="7">
+    <path d="M20 56 V10" stroke="#2b2f36"/>
+    <path d="M20 12 H38 A13 13 0 0 1 38 38 H20" stroke="#2b2f36"/>
+    <path d="M20 25 H44" stroke="#d4e619"/>
+  </g>
+</svg>

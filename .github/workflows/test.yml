@@ -1,0 +1,49 @@
+name: test
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: gofmt
+        run: |
+          $unformatted = gofmt -l .
+          if ($unformatted) {
+            Write-Error "these files are not gofmt-clean:`n$unformatted"
+            exit 1
+          }
+
+      - name: build
+        run: go build ./...
+
+      - name: vet
+        run: go vet ./...
+
+      - name: test
+        run: go test ./... -count=1 -timeout 10m
+
+      # The daemon, the interceptor and the router are all concurrent, so the
+      # race detector is part of the gate rather than an optional extra.
+      - name: test (race)
+        run: go test -race ./... -count=1 -timeout 15m
+
+      # A build that cannot report its own version is not releasable, and the
+      # version is what doctor uses to detect a stale daemon.
+      - name: version stamp
+        run: |
+          go build -ldflags "-X main.buildCommit=${{ github.sha }}" -o phaethon.exe ./cmd/phaethon
+          ./phaethon.exe version
