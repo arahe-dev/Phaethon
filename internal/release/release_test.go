@@ -224,3 +224,27 @@ func TestWorkflowBinaryPathsAreProduced(t *testing.T) {
 		}
 	}
 }
+
+// The publish step uploads dist/*, so dist must contain only publishable assets.
+//
+// A directory left in dist is uploaded as an asset named after it, and the
+// release fails at the very last step with a message about a file that cannot be
+// read. This happened: unpacking the Windows archive into dist/win to satisfy the
+// installer build put a directory where the asset glob expects files.
+func TestNothingUnpacksIntoTheReleaseDirectory(t *testing.T) {
+	workflow := repoFile(t, ".github/workflows/release.yml")
+
+	if !strings.Contains(workflow, "dist/*") {
+		return // not publishing from dist; nothing to guard
+	}
+	for _, m := range regexp.MustCompile(`Expand-Archive[^\n]*-DestinationPath\s+([^\s\\]+)`).FindAllStringSubmatch(workflow, -1) {
+		if strings.HasPrefix(m[1], "dist") {
+			t.Errorf("Expand-Archive writes to %s, which the publish step uploads as an asset; "+
+				"unpack outside dist instead", m[1])
+		}
+	}
+	// Any build step that writes into dist must write files, never a directory.
+	if strings.Contains(workflow, "-Out dist") && strings.Contains(workflow, "-DestinationPath dist") {
+		t.Error("scanning into dist while publishing dist/* will upload a directory as an asset")
+	}
+}

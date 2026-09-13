@@ -56,8 +56,12 @@ jobs:
           # build-all.ps1 stages intermediates outside the output directory so
           # they can be neither published nor hashed. Unpack it for the
           # installer rather than expecting a bare dist/phaethon.exe.
-          Expand-Archive -LiteralPath dist/phaethon-windows-amd64.zip -DestinationPath dist/win -Force
-          ./installer/build-installer.ps1 -Version "${{ github.ref_name }}" -Binary dist/win/phaethon.exe -Out dist
+          # Unpacked outside dist on purpose. The publish step uploads dist/*,
+          # so a directory left there is uploaded as an asset named after it and
+          # the release fails with "read dist\win: Incorrect function".
+          $staging = Join-Path $env:RUNNER_TEMP 'win'
+          Expand-Archive -LiteralPath dist/phaethon-windows-amd64.zip -DestinationPath $staging -Force
+          ./installer/build-installer.ps1 -Version "${{ github.ref_name }}" -Binary (Join-Path $staging 'phaethon.exe') -Out dist
 
       # Packaging and hashing both belong to build-all.ps1, which is the single
       # place that knows the asset naming contract the installer depends on.
@@ -79,9 +83,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # A private repository release: testers are collaborators, not the
-          # public, so the artifacts are attached to a draft-then-published
-          # release rather than announced.
+          # A prerelease: the artifacts are attached and marked as a beta rather than
+          # announced as a stable version.
           gh release create "${{ github.ref_name }}" `
             --title "Phaethon ${{ github.ref_name }}" `
             --notes-file docs/RELEASE-NOTES.md `
